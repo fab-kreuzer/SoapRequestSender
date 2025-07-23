@@ -1,16 +1,13 @@
-package de.fabkreuzer.soaprequestsender.ui.controller;
+package de.fabkreuzer.soaprequestsender.ui.awt.controller;
 
 import com.eviware.soapui.model.iface.Operation;
-import de.fabkreuzer.soaprequestsender.model.OperationWrapper;
 import de.fabkreuzer.soaprequestsender.model.Project;
 import de.fabkreuzer.soaprequestsender.model.RequestWrapper;
 import de.fabkreuzer.soaprequestsender.service.ProjectService;
 import de.fabkreuzer.soaprequestsender.service.WsdlService;
+import lombok.Getter;
+import lombok.Setter;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,7 +19,9 @@ public class WsdlSenderController {
     
     private final ProjectService projectService;
     private WsdlService wsdlService;
-    private Project currentProject;
+
+    @Getter
+    @Setter
     private String currentRequestContent;
     
     /**
@@ -91,43 +90,7 @@ public class WsdlSenderController {
     public String generateSampleRequest(Operation operation) {
         return wsdlService != null ? wsdlService.generateSampleRequest(operation) : "";
     }
-    
-    /**
-     * Sets the current project.
-     * 
-     * @param project The current project
-     */
-    public void setCurrentProject(Project project) {
-        this.currentProject = project;
-    }
-    
-    /**
-     * Gets the current project.
-     * 
-     * @return The current project
-     */
-    public Project getCurrentProject() {
-        return currentProject;
-    }
-    
-    /**
-     * Sets the current request content.
-     * 
-     * @param content The current request content
-     */
-    public void setCurrentRequestContent(String content) {
-        this.currentRequestContent = content;
-    }
-    
-    /**
-     * Gets the current request content.
-     * 
-     * @return The current request content
-     */
-    public String getCurrentRequestContent() {
-        return currentRequestContent;
-    }
-    
+
     /**
      * Creates a new project with the specified name and WSDL URL.
      * 

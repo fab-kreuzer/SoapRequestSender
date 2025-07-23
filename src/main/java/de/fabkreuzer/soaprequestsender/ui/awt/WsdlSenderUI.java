@@ -4,8 +4,9 @@ import com.eviware.soapui.model.iface.Operation;
 import de.fabkreuzer.soaprequestsender.model.OperationWrapper;
 import de.fabkreuzer.soaprequestsender.model.Project;
 import de.fabkreuzer.soaprequestsender.model.RequestWrapper;
-import de.fabkreuzer.soaprequestsender.ui.component.XmlTextPane;
-import de.fabkreuzer.soaprequestsender.ui.controller.WsdlSenderController;
+import de.fabkreuzer.soaprequestsender.ui.awt.component.XmlTextPane;
+import de.fabkreuzer.soaprequestsender.ui.awt.constants.AwtConstants;
+import de.fabkreuzer.soaprequestsender.ui.awt.controller.WsdlSenderController;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -19,6 +20,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.IOException;
 import java.util.List;
+
+import static de.fabkreuzer.soaprequestsender.ui.awt.constants.AwtConstants.ERROR;
 
 /**
  * Main UI class for the SOAP Request Sender application.
@@ -72,7 +75,7 @@ public class WsdlSenderUI {
     /**
      * Saves the current content of the request area to the selected request.
      */
-    private void saveRequestContent(FocusEvent e) {
+    private void saveRequestContent() {
         TreePath path = tree.getSelectionPath();
         if (path == null) {
             return;
@@ -80,8 +83,7 @@ public class WsdlSenderUI {
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
 
-        if (node != null && node.getUserObject() instanceof RequestWrapper) {
-            RequestWrapper request = (RequestWrapper) node.getUserObject();
+        if (node != null && node.getUserObject() instanceof RequestWrapper request) {
             String content = requestArea.getXmlContent();
 
             // Save the request content using the controller
@@ -92,14 +94,14 @@ public class WsdlSenderUI {
                 // The project node should be at index 1 in the path (root is at 0)
                 DefaultMutableTreeNode projectNode = (DefaultMutableTreeNode) path.getPathComponent(1);
 
-                if (projectNode.getUserObject() instanceof Project) {
-                    Project project = (Project) projectNode.getUserObject();
+                if (projectNode.getUserObject() instanceof Project project) {
                     try {
                         controller.saveProject(project);
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(frame,
-                            "Error saving project: " + ex.getMessage(),
-                            "Error",
+
+                            AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(),
+                            ERROR,
                             JOptionPane.ERROR_MESSAGE);
                         ex.printStackTrace();
                     }
@@ -142,14 +144,13 @@ public class WsdlSenderUI {
             projectNode = (DefaultMutableTreeNode) projectNode.getParent();
         }
 
-        if (projectNode != null && projectNode.getUserObject() instanceof Project) {
-            Project project = (Project) projectNode.getUserObject();
+        if (projectNode != null && projectNode.getUserObject() instanceof Project project) {
             try {
                 controller.saveProject(project);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(frame, 
-                    "Error saving project: " + ex.getMessage(), 
-                    "Error", 
+                    AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(), 
+                    ERROR,
                     JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -243,7 +244,7 @@ public class WsdlSenderUI {
         } catch (IOException e) {
             JOptionPane.showMessageDialog(frame, 
                 "Error loading projects: " + e.getMessage(), 
-                "Error", 
+                ERROR,
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
@@ -257,9 +258,8 @@ public class WsdlSenderUI {
         // Add action listener to save selected endpoint
         endpointField.addActionListener(e -> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-            if (node != null && node.getUserObject() instanceof RequestWrapper) {
-                RequestWrapper request = (RequestWrapper) node.getUserObject();
-                String selectedEndpoint = endpointField.getSelectedItem() != null ? 
+            if (node != null && node.getUserObject() instanceof RequestWrapper request) {
+                String selectedEndpoint = endpointField.getSelectedItem() != null ?
                     endpointField.getSelectedItem().toString() : "";
                 if (!selectedEndpoint.isEmpty()) {
                     request.setSelectedEndpoint(selectedEndpoint);
@@ -273,20 +273,7 @@ public class WsdlSenderUI {
         endpointFieldPanel.add(endpointField, BorderLayout.CENTER);
 
         // Add button to add a new endpoint
-        JButton addEndpointButton = new JButton("+");
-        addEndpointButton.setToolTipText("Add a new endpoint");
-        addEndpointButton.addActionListener(e -> {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-            if (node != null && node.getUserObject() instanceof RequestWrapper) {
-                RequestWrapper request = (RequestWrapper) node.getUserObject();
-                String newEndpoint = JOptionPane.showInputDialog(frame, "Enter new endpoint URL:");
-                if (newEndpoint != null && !newEndpoint.isEmpty()) {
-                    request.addEndpoint(newEndpoint);
-                    updateEndpointComboBox(request);
-                    saveProjectForNode(node);
-                }
-            }
-        });
+        JButton addEndpointButton = createAddEndpointButton();
 
         endpointFieldPanel.add(addEndpointButton, BorderLayout.EAST);
 
@@ -300,7 +287,7 @@ public class WsdlSenderUI {
         requestArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
-                saveRequestContent(e);
+                saveRequestContent();
             }
 
             @Override
@@ -312,8 +299,7 @@ public class WsdlSenderUI {
                 } else {
                     // Fallback to loading from the selected request
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                    if (node != null && node.getUserObject() instanceof RequestWrapper) {
-                        RequestWrapper request = (RequestWrapper) node.getUserObject();
+                    if (node != null && node.getUserObject() instanceof RequestWrapper request) {
                         requestArea.setXmlContent(request.getContent());
                     }
                 }
@@ -343,8 +329,7 @@ public class WsdlSenderUI {
         // Add action listener to the New Request menu item
         newRequestItem.addActionListener(e -> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-            if (node != null && node.getUserObject() instanceof OperationWrapper) {
-                OperationWrapper wrapper = (OperationWrapper) node.getUserObject();
+            if (node != null && node.getUserObject() instanceof OperationWrapper wrapper) {
                 Operation operation = wrapper.getOperation();
 
                 // Show dialog to enter request name
@@ -355,8 +340,7 @@ public class WsdlSenderUI {
 
                     // Add the project's endpoint to the request
                     DefaultMutableTreeNode projectNode = (DefaultMutableTreeNode) node.getPath()[1];
-                    if (projectNode.getUserObject() instanceof Project) {
-                        Project project = (Project) projectNode.getUserObject();
+                    if (projectNode.getUserObject() instanceof Project project) {
                         String endpoint = project.getWsdlUrl();
                         if (endpoint != null && !endpoint.isEmpty()) {
                             request.addEndpoint(endpoint);
@@ -381,14 +365,13 @@ public class WsdlSenderUI {
                     tree.scrollPathToVisible(path);
 
                     // Save the project
-                    if (projectNode.getUserObject() instanceof Project) {
-                        Project project = (Project) projectNode.getUserObject();
+                    if (projectNode.getUserObject() instanceof Project project) {
                         try {
                             controller.saveProject(project);
                         } catch (IOException ex) {
                             JOptionPane.showMessageDialog(frame, 
-                                "Error saving project: " + ex.getMessage(), 
-                                "Error", 
+                                AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(), 
+                                ERROR,
                                 JOptionPane.ERROR_MESSAGE);
                             ex.printStackTrace();
                         }
@@ -405,8 +388,7 @@ public class WsdlSenderUI {
             // Save content from the old selection if it was a request
             if (e.getOldLeadSelectionPath() != null) {
                 DefaultMutableTreeNode oldNode = (DefaultMutableTreeNode) e.getOldLeadSelectionPath().getLastPathComponent();
-                if (oldNode != null && oldNode.getUserObject() instanceof RequestWrapper) {
-                    RequestWrapper request = (RequestWrapper) oldNode.getUserObject();
+                if (oldNode != null && oldNode.getUserObject() instanceof RequestWrapper request) {
                     controller.saveRequestContent(request, requestArea.getXmlContent());
                 }
             }
@@ -419,17 +401,14 @@ public class WsdlSenderUI {
             }
 
             Object userObject = newNode.getUserObject();
-            if (userObject instanceof RequestWrapper) {
-                RequestWrapper request = (RequestWrapper) userObject;
+            if (userObject instanceof RequestWrapper request) {
                 String content = request.getContent();
                 controller.setCurrentRequestContent(content);
                 requestArea.setXmlContent(content);
 
                 // Update the endpoint dropdown with the endpoints from the request
                 updateEndpointComboBox(request);
-            } else if (userObject instanceof Project) {
-                Project project = (Project) userObject;
-                controller.setCurrentProject(project);
+            } else if (userObject instanceof Project project) {
                 endpointField.removeAllItems();
                 endpointField.addItem(project.getWsdlUrl());
                 controller.setCurrentRequestContent("");
@@ -474,12 +453,11 @@ public class WsdlSenderUI {
             // Get the selected node
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project)) {
+            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project selectedProject)) {
                 JOptionPane.showMessageDialog(frame, "Please select a project to load WSDL.");
                 return;
             }
 
-            Project selectedProject = (Project) selectedNode.getUserObject();
             String url = selectedProject.getWsdlUrl();
 
             // Show dialog to enter or confirm URL
@@ -516,9 +494,7 @@ public class WsdlSenderUI {
                         RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
 
                         // Add the project's endpoint to the request
-                        if (url != null && !url.isEmpty()) {
-                            defaultRequest.addEndpoint(url);
-                        }
+                        defaultRequest.addEndpoint(url);
                         wrapper.addRequest(defaultRequest);
 
                         // Add the default request node
@@ -538,8 +514,8 @@ public class WsdlSenderUI {
                     controller.saveProject(selectedProject);
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, 
-                        "Error saving project: " + ex.getMessage(), 
-                        "Error", 
+                        AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(), 
+                        ERROR,
                         JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
@@ -551,7 +527,7 @@ public class WsdlSenderUI {
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(frame, 
                     "Error loading WSDL: " + ex.getMessage(), 
-                    "Error", 
+                    ERROR,
                     JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -635,9 +611,7 @@ public class WsdlSenderUI {
                             RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
 
                             // Add the project's endpoint to the request
-                            if (url != null && !url.isEmpty()) {
-                                defaultRequest.addEndpoint(url);
-                            }
+                            defaultRequest.addEndpoint(url);
                             wrapper.addRequest(defaultRequest);
 
                             // Add the default request node
@@ -662,7 +636,6 @@ public class WsdlSenderUI {
                     // Expand the service node
                     tree.expandPath(new TreePath(serviceNode.getPath()));
 
-                    controller.setCurrentProject(project);
                     endpointField.removeAllItems();
                     endpointField.addItem(url);
 
@@ -671,15 +644,15 @@ public class WsdlSenderUI {
                         controller.saveProject(project);
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(frame, 
-                            "Error saving project: " + ex.getMessage(), 
-                            "Error", 
+                            AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(), 
+                            ERROR,
                             JOptionPane.ERROR_MESSAGE);
                         ex.printStackTrace();
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(frame, 
                         "Error loading WSDL: " + ex.getMessage(), 
-                        "Error", 
+                        ERROR,
                         JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
@@ -693,12 +666,11 @@ public class WsdlSenderUI {
         saveProjectButton.addActionListener(e -> {
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project)) {
+            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project project)) {
                 JOptionPane.showMessageDialog(frame, "Please select a project to save.");
                 return;
             }
 
-            Project project = (Project) selectedNode.getUserObject();
             String url = endpointField.getSelectedItem() != null ? endpointField.getSelectedItem().toString() : "";
 
             // Show dialog to enter or confirm URL
@@ -716,8 +688,8 @@ public class WsdlSenderUI {
                 JOptionPane.showMessageDialog(frame, "Project saved successfully.");
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(frame, 
-                    "Error saving project: " + ex.getMessage(), 
-                    "Error", 
+                    AwtConstants.ERROR_SAVING_PROJECT + ex.getMessage(), 
+                    ERROR,
                     JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -727,12 +699,10 @@ public class WsdlSenderUI {
         deleteProjectButton.addActionListener(e -> {
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project)) {
+            if (selectedNode == null || !(selectedNode.getUserObject() instanceof Project project)) {
                 JOptionPane.showMessageDialog(frame, "Please select a project to delete.");
                 return;
             }
-
-            Project project = (Project) selectedNode.getUserObject();
 
             int confirm = JOptionPane.showConfirmDialog(frame,
                 "Are you sure you want to delete project '" + project.getName() + "'?", 
@@ -744,14 +714,13 @@ public class WsdlSenderUI {
                     controller.deleteProject(project.getName());
                     rootNode.remove(selectedNode);
                     treeModel.reload();
-                    controller.setCurrentProject(null);
                     endpointField.removeAllItems();
                     controller.setCurrentRequestContent("");
                     requestArea.setXmlContent("");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, 
                         "Error deleting project: " + ex.getMessage(),
-                        "Error", 
+                        ERROR,
                         JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
@@ -759,5 +728,22 @@ public class WsdlSenderUI {
         });
 
         frame.setVisible(true);
+    }
+
+    private JButton createAddEndpointButton() {
+        JButton addEndpointButton = new JButton("+");
+        addEndpointButton.setToolTipText("Add a new endpoint");
+        addEndpointButton.addActionListener(e -> {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            if (node != null && node.getUserObject() instanceof RequestWrapper request) {
+                String newEndpoint = JOptionPane.showInputDialog(frame, "Enter new endpoint URL:");
+                if (newEndpoint != null && !newEndpoint.isEmpty()) {
+                    request.addEndpoint(newEndpoint);
+                    updateEndpointComboBox(request);
+                    saveProjectForNode(node);
+                }
+            }
+        });
+        return addEndpointButton;
     }
 }

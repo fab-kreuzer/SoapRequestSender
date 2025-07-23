@@ -1,4 +1,4 @@
-package de.fabkreuzer.soaprequestsender.ui.component;
+package de.fabkreuzer.soaprequestsender.ui.awt.component;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
