@@ -2,20 +2,18 @@ package de.fabkreuzer.soaprequestsender.model;
 
 import com.eviware.soapui.model.iface.Operation;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A serializable wrapper for Operation objects.
+ * A wrapper for Operation objects.
  * This class stores the essential information from an Operation object
  * that we need to display in the UI and generate sample requests.
  */
-public class OperationWrapper implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class OperationWrapper {
 
     private String name;
-    private transient Operation operation;
+    private Operation operation;
     private List<RequestWrapper> requests = new ArrayList<>();
 
     public OperationWrapper() {

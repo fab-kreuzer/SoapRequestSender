@@ -493,7 +493,7 @@ public class WsdlSenderUI {
                 selectedNode.removeAllChildren();
 
                 // Update the project with the new WSDL data using the controller
-                controller.updateProject(selectedProject, url);
+                Project updatedProject = controller.updateProject(selectedProject, url);
                 endpointField.removeAllItems();
                 endpointField.addItem(url);
                 controller.setCurrentRequestContent("");
@@ -504,28 +504,33 @@ public class WsdlSenderUI {
                 DefaultMutableTreeNode serviceNode = new DefaultMutableTreeNode(serviceName);
                 selectedNode.add(serviceNode);
 
-                // Add operations to the service node
-                List<Operation> operations = controller.loadWsdl(url);
-                for (Operation operation : operations) {
-                    // Create an OperationWrapper for the operation
-                    OperationWrapper wrapper = new OperationWrapper(operation);
-
-                    // Create a default request for the operation
-                    String sampleRequest = controller.generateSampleRequest(operation);
-                    RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
-
-                    // Add the project's endpoint to the request
-                    if (url != null && !url.isEmpty()) {
-                        defaultRequest.addEndpoint(url);
-                    }
-                    wrapper.addRequest(defaultRequest);
-
+                // Add operations from the updated project to the service node
+                for (OperationWrapper wrapper : updatedProject.getOperations()) {
                     DefaultMutableTreeNode operationNode = new DefaultMutableTreeNode(wrapper);
                     serviceNode.add(operationNode);
 
-                    // Add the default request node
-                    DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(defaultRequest);
-                    operationNode.add(requestNode);
+                    // Check if the operation has any requests
+                    if (wrapper.getRequests().isEmpty()) {
+                        // Create a default request for the operation
+                        String sampleRequest = controller.generateSampleRequest(wrapper.getOperation());
+                        RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
+
+                        // Add the project's endpoint to the request
+                        if (url != null && !url.isEmpty()) {
+                            defaultRequest.addEndpoint(url);
+                        }
+                        wrapper.addRequest(defaultRequest);
+
+                        // Add the default request node
+                        DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(defaultRequest);
+                        operationNode.add(requestNode);
+                    } else {
+                        // Add existing request nodes
+                        for (RequestWrapper request : wrapper.getRequests()) {
+                            DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(request);
+                            operationNode.add(requestNode);
+                        }
+                    }
                 }
 
                 // Save the updated project
@@ -618,28 +623,33 @@ public class WsdlSenderUI {
                     DefaultMutableTreeNode serviceNode = new DefaultMutableTreeNode(serviceName);
                     projectNode.add(serviceNode);
 
-                    // Add operations to the service node
-                    List<Operation> operations = controller.loadWsdl(url);
-                    for (Operation operation : operations) {
-                        // Create an OperationWrapper for the operation
-                        OperationWrapper wrapper = new OperationWrapper(operation);
-
-                        // Create a default request for the operation
-                        String sampleRequest = controller.generateSampleRequest(operation);
-                        RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
-
-                        // Add the project's endpoint to the request
-                        if (url != null && !url.isEmpty()) {
-                            defaultRequest.addEndpoint(url);
-                        }
-                        wrapper.addRequest(defaultRequest);
-
+                    // Add operations from the project to the service node
+                    for (OperationWrapper wrapper : project.getOperations()) {
                         DefaultMutableTreeNode operationNode = new DefaultMutableTreeNode(wrapper);
                         serviceNode.add(operationNode);
 
-                        // Add the default request node
-                        DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(defaultRequest);
-                        operationNode.add(requestNode);
+                        // Create a default request for the operation if it doesn't have any
+                        if (wrapper.getRequests().isEmpty()) {
+                            // Create a default request for the operation
+                            String sampleRequest = controller.generateSampleRequest(wrapper.getOperation());
+                            RequestWrapper defaultRequest = new RequestWrapper("Default Request", sampleRequest);
+
+                            // Add the project's endpoint to the request
+                            if (url != null && !url.isEmpty()) {
+                                defaultRequest.addEndpoint(url);
+                            }
+                            wrapper.addRequest(defaultRequest);
+
+                            // Add the default request node
+                            DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(defaultRequest);
+                            operationNode.add(requestNode);
+                        } else {
+                            // Add existing request nodes
+                            for (RequestWrapper request : wrapper.getRequests()) {
+                                DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode(request);
+                                operationNode.add(requestNode);
+                            }
+                        }
                     }
 
                     treeModel.reload();

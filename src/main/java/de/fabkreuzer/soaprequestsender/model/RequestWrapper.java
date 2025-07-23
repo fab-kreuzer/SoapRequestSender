@@ -1,15 +1,13 @@
 package de.fabkreuzer.soaprequestsender.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A serializable wrapper for SOAP request content.
+ * A wrapper for SOAP request content.
  * This class stores the request content, a name, and multiple endpoints.
  */
-public class RequestWrapper implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class RequestWrapper {
 
     private String name;
     private String content;

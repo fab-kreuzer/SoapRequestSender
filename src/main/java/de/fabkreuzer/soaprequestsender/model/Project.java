@@ -2,7 +2,6 @@ package de.fabkreuzer.soaprequestsender.model;
 
 import com.eviware.soapui.model.iface.Operation;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,8 +10,7 @@ import java.util.stream.Collectors;
  * Represents a SOAP project with a name, WSDL URL, and WSDL service information.
  * This class is used for storing project information on disk.
  */
-public class Project implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Project {
 
     private String name;
     private String wsdlUrl;
@@ -67,10 +65,28 @@ public class Project implements Serializable {
     }
 
     public void setOperations(List<Operation> operations) {
-        // Convert Operation objects to OperationWrapper objects
-        this.operations = operations.stream()
-            .map(OperationWrapper::new)
-            .collect(Collectors.toList());
+        // Create a map of operation names to existing OperationWrapper objects
+        java.util.Map<String, OperationWrapper> existingOperations = new java.util.HashMap<>();
+        for (OperationWrapper wrapper : this.operations) {
+            existingOperations.put(wrapper.getName(), wrapper);
+        }
+
+        // Create new list of OperationWrapper objects, preserving existing ones
+        List<OperationWrapper> newOperations = new ArrayList<>();
+        for (Operation operation : operations) {
+            String operationName = operation.getName();
+            if (existingOperations.containsKey(operationName)) {
+                // Use existing OperationWrapper but update its Operation field
+                OperationWrapper existingWrapper = existingOperations.get(operationName);
+                existingWrapper.setOperation(operation);
+                newOperations.add(existingWrapper);
+            } else {
+                // Create a new OperationWrapper
+                newOperations.add(new OperationWrapper(operation));
+            }
+        }
+
+        this.operations = newOperations;
     }
 
     @Override
