@@ -3,6 +3,8 @@ package de.fabkreuzer.soaprequestsender.service;
 import de.fabkreuzer.soaprequestsender.model.OperationWrapper;
 import de.fabkreuzer.soaprequestsender.model.Project;
 import de.fabkreuzer.soaprequestsender.model.RequestWrapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +18,8 @@ import java.util.Properties;
  */
 public class ProjectService {
 
+    private static final Logger logger = LogManager.getLogger(ProjectService.class);
+    
     private static final String PROJECTS_DIR = "projects";
     private static final String PROJECT_PROPERTIES = "project.properties";
     private static final String ENDPOINTS_FILE = "endpoints.properties";
@@ -49,12 +53,12 @@ public class ProjectService {
         }
 
         // Debug logging
-        System.out.println("[DEBUG] Saving project: " + project.getName());
-        System.out.println("[DEBUG] Operations count: " + project.getOperations().size());
+        logger.debug("Saving project: {}", project.getName());
+        logger.debug("Operations count: {}", project.getOperations().size());
         for (OperationWrapper operation : project.getOperations()) {
-            System.out.println("[DEBUG] Operation: " + operation.getName() + ", Requests count: " + operation.getRequests().size());
+            logger.debug("Operation: {}, Requests count: {}", operation.getName(), operation.getRequests().size());
             for (RequestWrapper request : operation.getRequests()) {
-                System.out.println("[DEBUG]   Request: " + request.getName() + ", Endpoints: " + request.getEndpoints().size());
+                logger.debug("  Request: {}, Endpoints: {}", request.getName(), request.getEndpoints().size());
             }
         }
 
@@ -311,7 +315,7 @@ public class ProjectService {
                 projects.add(loadProject(name));
             } catch (IOException e) {
                 // Skip projects that can't be loaded
-                System.err.println("Failed to load project: " + name);
+                logger.error("Failed to load project: {}", name, e);
             }
         }
 
